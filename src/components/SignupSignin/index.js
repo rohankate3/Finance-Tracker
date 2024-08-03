@@ -3,9 +3,9 @@ import './styles.css'
 import Input from '../Input'
 import { useState } from 'react'
 import Button from '../Button'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { toast } from 'react-toastify'
-import { auth } from '../../firebase'
+import { auth, provider } from '../../firebase'
 import { useNavigate } from 'react-router-dom'
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from '../../firebase';
@@ -18,7 +18,7 @@ function SignupSigninComponent() {
     let [password, setpassword] = useState('')
     let [confirmPass, setconfirmPass] = useState('')
     let [loading, setloading] = useState(false)
-    let [loginform, setloginform] = useState(false);    
+    let [loginform, setloginform] = useState(false);
     let navigate = useNavigate();
 
     function SignupwithEmail() {
@@ -74,13 +74,11 @@ function SignupSigninComponent() {
         setloading(true);
         if (!user) return;
 
-        const userRef = doc(db,'users',user.uid);
+        const userRef = doc(db, 'users', user.uid);
         const userData = await getDoc(userRef);
 
-        if (!userData.exists()) 
-            {
-            try 
-            {
+        if (!userData.exists()) {
+            try {
                 await setDoc(doc(db, 'users', user.uid), {
                     name: user.displayName ? user.displayName : name,
                     email: user.email,
@@ -89,11 +87,10 @@ function SignupSigninComponent() {
                 });
                 toast.success("Account Created!");
                 setloading(false);
-            } catch (error) 
-            {
+            } catch (error) {
                 toast.error(error.message);
                 setloading(false);
-                
+
             }
         } else {
             toast.error("Document already exists");
@@ -129,6 +126,39 @@ function SignupSigninComponent() {
         }
 
     }
+    function googleAuth() {
+
+        try {
+            
+            setloading(true);
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                // IdP data available using getAdditionalUserInfo(result)
+                // ...
+                console.log("User->>",user);
+                
+                toast.success("User Authenticated");
+                createDoc(user);
+                navigate('/dashboard');
+                setloading(false);
+                
+            }).catch((error) => {
+                // Handle Errors here.
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                toast.error(errorMessage);
+                setloading(false);
+            });
+        } catch (error) {
+            toast.error(error.message)   
+        }
+        
+    }
     return (
         <>
             {loginform ?
@@ -154,7 +184,7 @@ function SignupSigninComponent() {
                             text={loading ? 'Loading...' : 'Login Using Email and Password'}
                             onClick={loginupwithEmail} />
                         <p className='p-login'>or</p>
-                        <Button text={loading ? 'Loading...' : 'Login Using Google'} blue={true} />
+                        <Button onClick={googleAuth} text={loading ? 'Loading...' : 'Login Using Google'} blue={true} />
                         <p className='p-login' style={{ cursor: 'pointer' }} onClick={() => setloginform(!loginform)}>
                             or Don't Have an Account Already? Click Here
                         </p>
@@ -192,7 +222,7 @@ function SignupSigninComponent() {
                             text={loading ? 'Loading...' : 'Signup Using Email and Password'}
                             onClick={SignupwithEmail} />
                         <p className='p-login'>or</p>
-                        <Button text={loading ? 'Loading...' : 'Signup Using Google'} blue={true} />
+                        <Button onClick={googleAuth} text={loading ? 'Loading...' : 'Signup Using Google'} blue={true} />
                         <p className='p-login' style={{ cursor: 'pointer' }} onClick={() => setloginform(!loginform)}>
                             or Have an Account Already? Click Here
                         </p>
