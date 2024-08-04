@@ -5,7 +5,7 @@ import AddExpenseModal from '../components/Modals/AddExpenseModal';
 import AddIncomeModal from '../components/Modals/AddIncomeModal';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from "../firebase";
-import { addDoc, collection, getDocs, query } from "firebase/firestore";
+import { addDoc, collection, getDocs, query,deleteDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import TransactionsTable from '../components/TransactionsTables';
 import ChartComponent from '../components/Charts';
@@ -106,11 +106,36 @@ function Dashboard() {
     calculateBalance();
   }, [transactions]);
 
-
   let sortedTransaction=transactions.sort((a, b) => {
 
         return new Date(a.date) - new Date(b.date);
   })
+
+  const handleReset = async () => {
+    if (user) {
+      const q = query(collection(db, `users/${user.uid}/transactions`));
+      const querySnapshot = await getDocs(q);
+      
+      const deletePromises = [];
+      querySnapshot.forEach((doc) => {
+        deletePromises.push(deleteDoc(doc.ref));
+      });
+
+      try {
+        await Promise.all(deletePromises);
+        setTransactions([]);
+        setIncome(0);
+        setExpenses(0);
+        setTotalBalance(0);
+        toast.success("Balance and Transactions Reset!");
+      } catch (e) {
+        console.error("Error deleting documents: ", e);
+        toast.error("Couldn't reset transactions");
+      }
+    }
+  };
+
+
   return (
     <div>
       <Header />
@@ -124,6 +149,7 @@ function Dashboard() {
             totalbalance={totalbalance}
             showExpenseModal={showExpenseModal}
             showIncomeModal={showIncomeModal}
+            handleReset={handleReset}
           />
           { transactions &&transactions.length!=0? <ChartComponent sortedTransaction={sortedTransaction}/>:<NoTransactions/>}
           <AddExpenseModal
