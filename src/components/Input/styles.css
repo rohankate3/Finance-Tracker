@@ -17,6 +17,7 @@
     padding: 0.5rem 0rem;
     font-size: 1rem;
     opacity: 0.8;
+    color: black;
 }
 .custom-input:focus
 {

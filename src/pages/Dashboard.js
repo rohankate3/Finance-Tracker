@@ -8,7 +8,8 @@ import { auth, db } from "../firebase";
 import { addDoc, collection, getDocs, query } from "firebase/firestore";
 import { toast } from "react-toastify";
 import TransactionsTable from '../components/TransactionsTables';
-
+import ChartComponent from '../components/Charts';
+import NoTransactions from '../components/Notransactions';
 function Dashboard() {
   const [user] = useAuthState(auth);
   const [isExpenseModalVisible, setIsExpenseModalVisible] = useState(false);
@@ -105,6 +106,11 @@ function Dashboard() {
     calculateBalance();
   }, [transactions]);
 
+
+  let sortedTransaction=transactions.sort((a, b) => {
+
+        return new Date(a.date) - new Date(b.date);
+  })
   return (
     <div>
       <Header />
@@ -119,6 +125,7 @@ function Dashboard() {
             showExpenseModal={showExpenseModal}
             showIncomeModal={showIncomeModal}
           />
+          { transactions &&transactions.length!=0? <ChartComponent sortedTransaction={sortedTransaction}/>:<NoTransactions/>}
           <AddExpenseModal
             isExpenseModalVisible={isExpenseModalVisible}
             handleExpenseCancel={handleExpenseCancel}

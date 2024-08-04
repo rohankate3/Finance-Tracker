@@ -78,4 +78,14 @@ input{
   padding-bottom: 1rem;
 }
 
-
+.charts-wrapper
+{
+  display: flex;
+  width: 94%;
+  justify-content: space-between;
+  height: auto;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
+  margin: 2rem;
+}
